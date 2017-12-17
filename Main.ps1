@@ -8,23 +8,23 @@ $tablesHTML = @($test2.ParsedHtml.getElementsByTagName("TABLE"))
 
 $datatable = New-Object System.Data.DataTable
 
- $datatable.Columns.AddRange(@(
+$datatable.Columns.AddRange(@(
     (
-      "Name",
-      "Faction",
-      "Color",
-      "Cost",
-      "Health",
-      "Type",
-      "Rarity",
-      "Dice1",
-      "Dice2",
-      "Dice3",
-      "Dice4",
-      "Dice5",
-      "Dice6",
-      "Set")
-     ))
+        "Name",
+        "Faction",
+        "Color",
+        "Cost",
+        "Health",
+        "Type",
+        "Rarity",
+        "Dice1",
+        "Dice2",
+        "Dice3",
+        "Dice4",
+        "Dice5",
+        "Dice6",
+        "Set")
+        ))
  
 $data = $test2.ParsedHtml.getElementsByTagName("tr") #| ParsedHTML
  
