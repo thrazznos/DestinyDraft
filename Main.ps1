@@ -279,18 +279,18 @@ function randomize
 Write-Verbose "Retrieving Sets"
 $awakenings = get_DestinySet
 
+$DraftSet = $awakenings
+#======================Other Sets included and merged here=====================
 #$SpiritOfRebellion = get_DestinySet https://swdestinydb.com/set/SoR
+#$DraftSet[0].Table.Merge($SpiritOfRebellion[0].Table)
+
 #$EmpireAtWar = get_DestinySet https://swdestinydb.com/set/EaW
-#$TwoPlayerGame = get_DestinySet https://swdestinydb.com/set/TPG
+#$DraftSet[0].Table.Merge($EmpireAtWar[0].Table)
 
 #$SetList = $awakenings + $SpiritOfRebellion + $EmpireAtWar + $TwoPlayerGame
+#$DraftSet[0].Table.Merge($TwoPlayerGame[0].Table)
 
-#Do some weird reference to get the data out.
-#$AwakeningsSet = $SetList[0].Table[0]
-$DraftSet = $awakenings
-$DraftSet[0].Table.Merge($SpiritOfRebellion[0].Table)
-$DraftSet[0].Table.Merge($EmpireAtWar[0].Table)
-$DraftSet[0].Table.Merge($TwoPlayerGame[0].Table)
+#==============================================================================
  
 #Filter out all dice cards and battlefields
 Write-Verbose "Filtering Set" #TODO: Could describe types of cards being filtered out, make the filtering more functional too
