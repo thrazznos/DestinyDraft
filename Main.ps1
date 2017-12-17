@@ -5,22 +5,26 @@ function get_DestinySet
 $test2 = iwr $uri -Method GET
  
 $tablesHTML = @($test2.ParsedHtml.getElementsByTagName("TABLE"))
- 
+
 $datatable = New-Object System.Data.DataTable
-$datatable.Columns.Add("Name")
-$datatable.Columns.Add("Faction")
-$datatable.Columns.Add("Color")
-$datatable.Columns.Add("Cost")
-$datatable.Columns.Add("Health")
-$datatable.Columns.Add("Type")
-$datatable.Columns.Add("Rarity")
-$datatable.Columns.Add("Dice1")
-$datatable.Columns.Add("Dice2")
-$datatable.Columns.Add("Dice3")
-$datatable.Columns.Add("Dice4")
-$datatable.Columns.Add("Dice5")
-$datatable.Columns.Add("Dice6")
-$datatable.Columns.Add("Set")
+
+ $datatable.Columns.AddRange(@(
+    (
+      "Name",
+      "Faction",
+      "Color",
+      "Cost",
+      "Health",
+      "Type",
+      "Rarity",
+      "Dice1",
+      "Dice2",
+      "Dice3",
+      "Dice4",
+      "Dice5",
+      "Dice6",
+      "Set")
+     ))
  
 $data = $test2.ParsedHtml.getElementsByTagName("tr") #| ParsedHTML
  
@@ -75,6 +79,11 @@ forEach($datum in $data){
 #$datatable |ogv
  
 return $datatable
+}
+
+private function
+{
+
 }
  
 
