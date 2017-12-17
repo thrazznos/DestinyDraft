@@ -2,96 +2,96 @@ function get_DestinySet
 {
     param([string]$uri = "http://swdestinydb.com/set/AW")
  
-$test2 = iwr $uri -Method GET
+    $test2 = Invoke-WebRequest $uri -Method GET
  
-$tablesHTML = @($test2.ParsedHtml.getElementsByTagName("TABLE"))
+    $tablesHTML = @($test2.ParsedHtml.getElementsByTagName("TABLE"))
  
-$datatable = New-Object System.Data.DataTable
-$datatable.Columns.AddRange(@(
-    (
-        "Name",
-        "Faction",
-        "Color",
-        "Cost",
-        "Health",
-        "Type",
-        "Rarity",
-        "Dice1",
-        "Dice2",
-        "Dice3",
-        "Dice4",
-        "Dice5",
-        "Dice6",
-        "Set")
-        ))
+    $datatable = New-Object System.Data.DataTable
+    $datatable.Columns.AddRange(@(
+        (
+            "Name",
+            "Faction",
+            "Color",
+            "Cost",
+            "Health",
+            "Type",
+            "Rarity",
+            "Dice1",
+            "Dice2",
+            "Dice3",
+            "Dice4",
+            "Dice5",
+            "Dice6",
+            "Set")
+            ))
  
-$data = $test2.ParsedHtml.getElementsByTagName("tr") #| ParsedHTML
+    $data = $test2.ParsedHtml.getElementsByTagName("tr") #| ParsedHTML
  
  
-forEach($datum in $data){
-    #Find all items with TableRow Tag
-    if($datum.tagname -eq "TR"){
-        $dataRow = $datatable.NewRow()
-        #Get children of Table Rows (contains TD items)
-        $cells = $datum.children
-        $ListItems = @()
+    forEach($datum in $data){
+        #Find all items with TableRow Tag
+        if($datum.tagname -eq "TR"){
+            $dataRow = $datatable.NewRow()
+            #Get children of Table Rows (contains TD items)
+            $cells = $datum.children
+            $ListItems = @()
        
-        #Grab all table data cells
-        forEach($child in $cells){
-            if($child.tagName -eq "td"){
-                #$thisRow += $child.innerText
-                Write-Output $child.innerText
-                #Add item to list
-                $ListItems += $child.innerText
+            #Grab all table data cells
+            forEach($child in $cells){
+                if($child.tagName -eq "td"){
+                    #$thisRow += $child.innerText
+                    Write-Output $child.innerText
+                    #Add item to list
+                    $ListItems += $child.innerText
+                }
             }
-        }
  
-        #put items 1-6 + last into datarow (Leave out the dice sides)
-        $dataRow.Name = $ListItems[0]
-        $dataRow.Faction = $ListItems[1]
-        $dataRow.Color = $ListItems[2]
-        $dataRow.Cost = $ListItems[3]
-        $dataRow.Health = $ListItems[4]
-        $dataRow.Type = $ListItems[5]
-        $dataRow.Rarity = $ListItems[6]
+            #put items 1-6 + last into datarow (Leave out the dice sides)
+            $dataRow.Name = $ListItems[0]
+            $dataRow.Faction = $ListItems[1]
+            $dataRow.Color = $ListItems[2]
+            $dataRow.Cost = $ListItems[3]
+            $dataRow.Health = $ListItems[4]
+            $dataRow.Type = $ListItems[5]
+            $dataRow.Rarity = $ListItems[6]
  
-        $dataRow.Set = $ListItems[-1]
+            $dataRow.Set = $ListItems[-1]
        
-        $dataRow.Dice1 = $ListItems[7]
+            $dataRow.Dice1 = $ListItems[7]
  
-        if ($ListItems[7] -ne ' ')
-        {
+            if ($ListItems[7] -ne ' ')
+            {
  
-            $dataRow.Dice2 = $ListItems[8]
-            $dataRow.Dice3 = $ListItems[9]
-            $dataRow.Dice4 = $ListItems[10]
-            $dataRow.Dice5 = $ListItems[11]
-            $dataRow.Dice6 = $ListItems[12]
+                $dataRow.Dice2 = $ListItems[8]
+                $dataRow.Dice3 = $ListItems[9]
+                $dataRow.Dice4 = $ListItems[10]
+                $dataRow.Dice5 = $ListItems[11]
+                $dataRow.Dice6 = $ListItems[12]
+            }
+ 
+            Write-Debug $dataRow
+ 
+ 
+            $datatable.Rows.Add($dataRow)
         }
- 
-        Write-Debug $dataRow
- 
- 
-        $datatable.Rows.Add($dataRow)
     }
-}
-#$datatable |ogv
+    
+    #$datatable |ogv
  
-return $datatable
+    return $datatable
 }
- 
 
 function offer_card
 {
     param(
-    $playerNumber,
-    $draftedBatch
+        $playerNumber,
+        $draftedBatch
     )
 
     Write-Host ("Player " + $playerNumber + " what card do you want?")
     $playerInput = Read-Host
 
-    if($draftedBatch.GetEnumerator() | where {$_.Value -eq $playerInput} )
+    if($draftedBatch.GetEnumerator() | Where-Object {$_.Value -eq $playerInput} )
     { Write-Host ("That card is taken") 
     }
 
@@ -110,11 +110,9 @@ function output_results
     {
         Write-Host ("--------------------------------------------------------")
         Write-Host ("Cards selected by Player: " + $i)
-        $draftedCards.GetEnumerator() | where {$_.Value -eq $i} |% Name
+        $draftedCards.GetEnumerator() | Where-Object {$_.Value -eq $i} |ForEach-Object Name
         #$var.Name | ogv
     }
-
-
 }
 
 
@@ -129,9 +127,10 @@ to the players and outputs their card lists afterward
 #>
 function run_ReflectiveBatch_draft
 {
-    param($Cards,
-    $NumPlayers,
-    $num_drafts
+    param(
+        $Cards,
+        $NumPlayers,
+        $num_drafts
     )
  
     $cardlist = @()
@@ -142,7 +141,7 @@ function run_ReflectiveBatch_draft
     }
  
     #Randomize the cards in the list
-    $DraftDeck = randomize $cardlist
+    $DraftDeck = $cardList | Sort-Object {Get-Random}
  
     Write-Verbose ("Cardlist has " + $cardlist.Count + " cards")
     Write-Verbose ("Shuffledlist has " + $DraftDeck.Count + " cards")
@@ -153,7 +152,6 @@ function run_ReflectiveBatch_draft
 
     $PlayerOffset = 0   #Used to rotate who is first player ambivalent of iterations
 
-
     #Display the cards in groups
     #2 cards per player + 1 per batch
     for ($i=0; $i -lt ($num_drafts); $i++)
@@ -162,14 +160,10 @@ function run_ReflectiveBatch_draft
         Write-Host ("Player " + ($PlayerOffset + 1) + " is start")
         Write-Host "================================="
 
-
         #Set the batch iterators (ex 0-4 for 2 players, next iteration 5-9)
         $start = $i * $cardsInBatch
         $end = ($i + 1) * $cardsInBatch - 1
         $draftedBatch = @{}
-
-
-
 
         #Display the batch of cards
         #Print each card with Index prefix
@@ -189,7 +183,7 @@ function run_ReflectiveBatch_draft
                 $playerInput = Read-Host
 
 
-                if($draftedBatch.GetEnumerator() | where {$_.Name -eq $DraftDeck[$start + $playerInput]} )
+                if($draftedBatch.GetEnumerator() | Where-Object {$_.Name -eq $DraftDeck[$start + $playerInput]} )
                 { Write-Host ("That card is taken") 
                 }
 
@@ -214,7 +208,7 @@ function run_ReflectiveBatch_draft
                 Write-Host ("Player " + ($playerIterator)+ " choose a card")
                 $playerInput = Read-Host
 
-                if($draftedBatch.GetEnumerator() | where {$_.Name -eq $DraftDeck[$start + $playerInput]} )
+                if($draftedBatch.GetEnumerator() | Where-Object {$_.Name -eq $DraftDeck[$start + $playerInput]} )
                 { Write-Host ("That card is taken") 
                 }
 
@@ -226,9 +220,6 @@ function run_ReflectiveBatch_draft
                 }
 
             }
-
-
-
         }
         #----------------------------------------------------------------------------------------------
  
@@ -241,9 +232,6 @@ function run_ReflectiveBatch_draft
 
         #Output the results
         #$draftedCards.GetEnumerator() | sort -Property Value
-
- 
- 
     }
     
     Write-Verbose ("End Draft " + ($i + 1))
@@ -258,23 +246,8 @@ function run_ReflectiveBatch_draft
  
  
     #write-debug $cardlist
-   
- 
 }
- 
-function randomize
-{
-    param($cardlist)
-    $shuffledList = @()
-   
-    
-    $shuffledlist = $cardList | Sort-Object {Get-Random}
- 
-    return $shuffledList
-}
- 
- 
- 
+ 1
 #Pull Awakenings Set
 Write-Verbose "Retrieving Sets"
 $awakenings = get_DestinySet
@@ -294,14 +267,11 @@ $DraftSet = $awakenings
  
 #Filter out all dice cards and battlefields
 Write-Verbose "Filtering Set" #TODO: Could describe types of cards being filtered out, make the filtering more functional too
-$Draftables = $DraftSet[0].Table.Rows | where {($_.Type -ne "Battlefield" ) -and ($_.Dice1 -eq " ")}
- 
+$Draftables = $DraftSet | Where-Object {($_.Type -ne "Battlefield" ) -and ($_.Dice1 -eq " ")}
 #$SpiritOfRebellion = get_DestinySet
  
 Write-Verbose "Starting Draft sequence"
 run_ReflectiveBatch_draft -Cards $Draftables -NumPlayers 2 -num_drafts 30
- 
- 
  
  
 #$SpiritOfRebellion = get_DestinySet https://swdestinydb.com/set/SoR
