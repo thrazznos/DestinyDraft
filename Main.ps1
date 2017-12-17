@@ -105,8 +105,10 @@ function output_results
 
     for($i=1;$i -le $numPlayers; $i++)
     {
+        Write-Host ("--------------------------------------------------------")
         Write-Host ("Cards selected by Player: " + $i)
-        $draftedCards.GetEnumerator() | where {$_.Value -eq $i}
+        $draftedCards.GetEnumerator() | where {$_.Value -eq $i} |% Name
+        #$var.Name | ogv
     }
 
 
@@ -122,7 +124,7 @@ to the players and outputs their card lists afterward
  
 --------------------------------------
 #>
-function run_draft
+function run_ReflectiveBatch_draft
 {
     param($Cards,
     $NumPlayers,
@@ -146,33 +148,41 @@ function run_draft
  
     $draftedCards = @{}
 
-
+    $PlayerOffset = 0   #Used to rotate who is first player ambivalent of iterations
 
 
     #Display the cards in groups
     #2 cards per player + 1 per batch
     for ($i=0; $i -lt ($num_drafts); $i++)
     {
+        Write-Host ("Starting batch " + ($i + 1) + " of " + $num_drafts)
+        Write-Host ("Player " + ($PlayerOffset + 1) + " is start")
+        Write-Host "================================="
+
+
         #Set the batch iterators (ex 0-4 for 2 players, next iteration 5-9)
         $start = $i * $cardsInBatch
         $end = ($i + 1) * $cardsInBatch - 1
         $draftedBatch = @{}
 
+
+
+
         #Display the batch of cards
         #Print each card with Index prefix
-        for ($j=1; $j -lt ($cardsInBatch + 1);$j++)
+        for ($j=1; $j -le $cardsInBatch;$j++)
         {Write-Host($j.ToString() + ". " + $DraftDeck[$start + $j])}
 
 
         #------------------------------------Individual Draft Loop------------------------------------
         #Loop goes through deck in chunks, drafting small numbers from each batch then moving on to next
-        for ($j=1; $j -lt ($cardsInBatch); $j++)
+        for ($j=0; $j -lt ($cardsInBatch - 1); $j++)
         {
             #If on first pass (divide current iterator by half of the total)
-            if($j -le $NumPlayers)
+            if($j -lt $NumPlayers)
             {
-                $playerIterator = $j
-                Write-Host ("Player " + $j + " what card do you want?")
+                $playerIterator = (($j + $PlayerOffset) % $NumPlayers) + 1
+                Write-Host ("Player " + $playerIterator + " what card do you want?")
                 $playerInput = Read-Host
 
 
@@ -182,6 +192,7 @@ function run_draft
 
                 else
                 {
+                    Write-Host("You took " + $DraftDeck[$start + $playerInput])
                     $key = $DraftDeck[$start + $playerInput]
                     $value = $playerIterator
                  $draftedBatch.Add($key, $value)
@@ -191,8 +202,13 @@ function run_draft
             #else on second half, then do players in reverse order
             else
             {
-                $playerIterator = $cardsInBatch - $j
-                Write-Host ("Player " + $playerIterator + " choose a card")
+                $baseiterator = ($j % $NumPlayers) + 1                                             # 1, 2, 3, 4,    2, 3, 4, 1
+
+                $playerIterator = ((($NumPlayers * 2) - 1) - $j + $PlayerOffset) % $NumPlayers + 1 # 4, 3, 2, 1,    1, 4, 3, 2
+                #1, 2, 3, 4, 4, 3, 2, 1
+                #2, 3, 4, 1, 1, 4, 3, 2
+
+                Write-Host ("Player " + ($playerIterator)+ " choose a card")
                 $playerInput = Read-Host
 
                 if($draftedBatch.GetEnumerator() | where {$_.Name -eq $DraftDeck[$start + $playerInput]} )
@@ -215,6 +231,9 @@ function run_draft
  
         #Add the drafted cards to the big pile of drafted cards
         $draftedCards = $draftedCards + $draftedBatch
+
+        #update playeroffset (cycle 0-Numplayers)
+        $playerOffset = ($PlayerOffset + 1) % $NumPlayers
 
 
         #Output the results
@@ -256,17 +275,28 @@ function randomize
 #Pull Awakenings Set
 Write-Verbose "Retrieving Sets"
 $awakenings = get_DestinySet
+
+#$SpiritOfRebellion = get_DestinySet https://swdestinydb.com/set/SoR
+#$EmpireAtWar = get_DestinySet https://swdestinydb.com/set/EaW
+#$TwoPlayerGame = get_DestinySet https://swdestinydb.com/set/TPG
+
+#$SetList = $awakenings + $SpiritOfRebellion + $EmpireAtWar + $TwoPlayerGame
+
 #Do some weird reference to get the data out.
-$AwakeningsSet = $awakenings[0].Table[0]
+#$AwakeningsSet = $SetList[0].Table[0]
+$DraftSet = $awakenings
+$DraftSet[0].Table.Merge($SpiritOfRebellion[0].Table)
+$DraftSet[0].Table.Merge($EmpireAtWar[0].Table)
+$DraftSet[0].Table.Merge($TwoPlayerGame[0].Table)
  
 #Filter out all dice cards and battlefields
 Write-Verbose "Filtering Set" #TODO: Could describe types of cards being filtered out, make the filtering more functional too
-$AwakeningsDraftables = $AwakeningsSet.Rows | where {($_.Type -ne "Battlefield" ) -and ($_.Dice1 -eq " ")}
+$Draftables = $DraftSet[0].Table.Rows | where {($_.Type -ne "Battlefield" ) -and ($_.Dice1 -eq " ")}
  
 #$SpiritOfRebellion = get_DestinySet
  
 Write-Verbose "Starting Draft sequence"
-run_draft -Cards $AwakeningsDraftables -NumPlayers 2 -num_drafts 1
+run_ReflectiveBatch_draft -Cards $Draftables -NumPlayers 2 -num_drafts 30
  
  
  
