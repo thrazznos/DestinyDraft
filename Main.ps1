@@ -80,13 +80,7 @@ forEach($datum in $data){
  
 return $datatable
 }
-
-private function
-{
-
-}
  
-
 function offer_card
 {
     param(
