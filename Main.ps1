@@ -25,61 +25,49 @@ function get_DestinySet
             "Set")
             ))
  
-    $data = $test2.ParsedHtml.getElementsByTagName("tr") #| ParsedHTML
- 
- 
-    forEach($datum in $data){
-        #Find all items with TableRow Tag
-        if($datum.tagname -eq "TR"){
-            $dataRow = $datatable.NewRow()
-            #Get children of Table Rows (contains TD items)
-            $cells = $datum.children
-            $ListItems = @()
-       
-            #Grab all table data cells
-            forEach($child in $cells){
-                if($child.tagName -eq "td"){
-                    #$thisRow += $child.innerText
-                    Write-Output $child.innerText
-                    #Add item to list
-                    $ListItems += $child.innerText
-                }
-            }
- 
-            #put items 1-6 + last into datarow (Leave out the dice sides)
-            $dataRow.Name = $ListItems[0]
-            $dataRow.Faction = $ListItems[1]
-            $dataRow.Color = $ListItems[2]
-            $dataRow.Cost = $ListItems[3]
-            $dataRow.Health = $ListItems[4]
-            $dataRow.Type = $ListItems[5]
-            $dataRow.Rarity = $ListItems[6]
- 
-            $dataRow.Set = $ListItems[-1]
-       
-            $dataRow.Dice1 = $ListItems[7]
- 
-            if ($ListItems[7] -ne ' ')
-            {
- 
-                $dataRow.Dice2 = $ListItems[8]
-                $dataRow.Dice3 = $ListItems[9]
-                $dataRow.Dice4 = $ListItems[10]
-                $dataRow.Dice5 = $ListItems[11]
-                $dataRow.Dice6 = $ListItems[12]
-            }
- 
-            Write-Debug $dataRow
- 
- 
-            $datatable.Rows.Add($dataRow)
+    $test2.ParsedHtml.getElementsByTagName("tr") |
+        Where-Object { $_.tagname -eq "TR" } |
+        ForEach-Object {
+            $dataRow = generate_data_row($datatable, $_ |
+                Where-Object { $_.Value.tagName -eq "td"})
+            $datatable.Rows.Add($dataRow) 
         }
-    }
     
     #$datatable |ogv
  
     return $datatable
 }
+
+function generate_data_row
+{
+    param($datatable, $listItems)
+
+    #put items 1-6 + last into datarow (Leave out the dice sides)
+    $dataRow = $datatable.NewRow()
+    $dataRow.Name = $listItems[0]
+    $dataRow.Faction = $listItems[1]
+    $dataRow.Color = $listItems[2]
+    $dataRow.Cost = $listItems[3]
+    $dataRow.Health = $listItems[4]
+    $dataRow.Type = $listItems[5]
+    $dataRow.Rarity = $listItems[6]
+
+    $dataRow.Set = $listItems[-1]
+
+    $dataRow.Dice1 = $listItems[7]
+
+    if ($listItems[7] -ne ' ')
+    {
+        $dataRow.Dice2 = $listItems[8]
+        $dataRow.Dice3 = $listItems[9]
+        $dataRow.Dice4 = $listItems[10]
+        $dataRow.Dice5 = $listItems[11]
+        $dataRow.Dice6 = $listItems[12]
+    }
+
+    return $dataRow
+}
+
 
 function offer_card
 {
